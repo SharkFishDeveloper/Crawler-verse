@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
   provider = "prisma-client-js"
@@ -14,8 +9,19 @@ datasource db {
 }
 
 
-model User{
-  id   String  @id
-  name String 
-  password String
+model Website {
+  id      String   @id @default(uuid()) 
+  name    String   @unique
+  word    Word[]
+  metadata    Json?
+}
+
+model Word {
+  id   String @id @default(uuid()) 
+  word String
+  importance Int
+  websiteId  String  // Foreign key to Website
+  website    Website @relation(fields: [websiteId], references: [id]) 
+  @@index([word])       // Index on the word column
+  @@index([websiteId])  // Index on the websiteId column
 }

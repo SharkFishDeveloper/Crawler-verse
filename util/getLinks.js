@@ -1,6 +1,7 @@
 import checkRobotsTxt from "./checkRobots.js";
 import linksFilterer from "./linksFilterer.js";
 import { countWords } from "./core.js";
+import prisma from "./prisma.js";
 
 
 export default async function crawl(urlString) {
@@ -29,18 +30,19 @@ export default async function crawl(urlString) {
 
     const html = await response.text();
 
-    // Extract URLs
     const links = [...html.matchAll(/href="(https?:\/\/[^"]+)"/g)].map(match => match[1]);
-    // console.log(`Found ${links.length} links on ${url.href}:`, links);
 
-    // Extract title and metadata
     const titleMatch = html.match(/<title>([^<]*)<\/title>/);
     const title = titleMatch ? titleMatch[1] : "No title";
 
     //! count no. of words per page and arrange them
     const bodyText = html.replace(/<\/?[^>]+(>|$)/g, " ");  // Remove HTML tags
     const wordFrequency = countWords(bodyText);
-    console.log(`Word frequency for ${url}:`, wordFrequency);
+
+    //* save to DATABASE
+    const metadata = extractMetadata(html);
+    await saveWordFrequencies(urlString,wordFrequency,metadata);
+    //* AFTER SAVINGING TO DB
 
     let listOfFilteredLinks = linksFilterer(links);
     listOfFilteredLinks = listOfFilteredLinks.filter(link => {
@@ -49,3 +51,41 @@ export default async function crawl(urlString) {
     });
     return listOfFilteredLinks;
 }
+
+function extractMetadata(html) {
+    // Example: Extract a description from the <meta name="description" content="..."> tag
+    const metaDescriptionMatch = html.match(/<meta name="description" content="([^"]+)"/);
+    const description = metaDescriptionMatch ? metaDescriptionMatch[1] : "No description available";
+
+
+    // Combine them into a JSON object to store in the metadata field
+    return description
+}
+
+async function saveWordFrequencies(websiteName, wordFrequency,metadata) {
+    try {
+
+        const website = await prisma.website.create({
+            data: {
+                name: websiteName, // Create the website
+                metadata: metadata, // Add the metadata
+            },
+        });
+
+        const wordData = wordFrequency.map(([word, importance]) => ({
+            word,
+            importance,
+            websiteId: website.id,
+        }));
+
+        // Insert all words for the newly created website
+        await prisma.word.createMany({
+            data: wordData,
+        });
+
+      console.log('Word frequencies saved successfully!');
+    } catch (error) {
+        console.log(error)
+    }
+  }
+  

@@ -4,8 +4,8 @@ export const stopWords = new Set([
     "will", "just", "about", "above", "below", "after", "before", "during", "between", "under", "over", "each", "any",
     "all", "some", "more", "few", "less", "most", "least", "own", "other", "another", "such", "so", "than", "too", "very",
     "s", "t", "can", "will", "just", "don", "should", "now", "d", "ll", "m", "o", "re", "ve", "y", "ain", "aren", "couldn",
-    "didn", "doesn", "hadn", "hasn", "haven", "isn", "ma", "mightn", "mustn", "needn", "shan", "shouldn", "wasn", "weren",
-    "won", "wouldn"
+    "didn", "doesn", "hadn", "hasn", "haven", "isn", "ma", "mightn", "mustn", "needn", "shan", "shouldn", "wasn", "weren","was",
+    "won", "wouldn","mwparseroutput","hlist","olmwparseroutput","sisterprojectslist","dlmwparseroutput","ddlastchildaftermwparseroutput","dtlastchildaftermwparseroutput","wikisource","plainlist","mainpageboxbluemwparseroutput","mainpageboxgreenmwparseroutput","emmwparseroutput","mainpageheading","mainpageboxorange","mainpagemaintable","mainpageboxgreen","mainpageboxblue"
 ]);
 
 // Function to clean and tokenize text into words
@@ -33,9 +33,15 @@ export function countWords(text, minLength = 3, maxFrequency = 100) {
         }
     }
 
-    // Convert map to an array and sort by frequency
-    const sortedWordCount = [...wordCount.entries()]
-        .sort((a, b) => b[1] - a[1]);  // Sort in descending order
+    const totalWords = words.filter(word => word && !stopWords.has(word) && word.length >= minLength && word.length <= 30).length;
 
-    return sortedWordCount.slice(0, 100);
+    // Normalize word count by dividing by total word count
+    const normalizedWordCount = [...wordCount.entries()].map(([word, count]) => {
+        const normalizedCount = Math.floor((count / totalWords)*10000);
+        return [word, normalizedCount];
+    });
+
+    // Sort by normalized frequency in descending order
+    const sortedWordCount = normalizedWordCount.sort((a, b) => b[1] - a[1]);
+    return sortedWordCount.slice(0, 40);
 }
