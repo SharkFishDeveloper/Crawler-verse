@@ -1,17 +1,23 @@
-export const stopWords = new Set([
-    "the", "and", "for", "with", "this", "that", "of", "to", "is", "in", "on", "at", "a", "an", "by", "it", "as", "from", "be",
-    "or", "but", "not", "are", "were", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing",
-    "will", "just", "about", "above", "below", "after", "before", "during", "between", "under", "over", "each", "any",
-    "all", "some", "more", "few", "less", "most", "least", "own", "other", "another", "such", "so", "than", "too", "very",
-    "s", "t", "can", "will", "just", "don", "should", "now", "d", "ll", "m", "o", "re", "ve", "y", "ain", "aren", "couldn",
-    "didn", "doesn", "hadn", "hasn", "haven", "isn", "ma", "mightn", "mustn", "needn", "shan", "shouldn", "wasn", "weren","was",
-    "won", "wouldn","mwparseroutput","hlist","olmwparseroutput","sisterprojectslist","dlmwparseroutput","ddlastchildaftermwparseroutput","dtlastchildaftermwparseroutput","wikisource","plainlist","mainpageboxbluemwparseroutput","mainpageboxgreenmwparseroutput","emmwparseroutput","mainpageheading","mainpageboxorange","mainpagemaintable","mainpageboxgreen","mainpageboxblue"
+import stopwords from 'stopwords';
+import natural from 'natural';
+
+// Load default English stop words
+const englishStopWords = new Set(stopwords.english);
+
+// Additional stop words that you want to include
+const extraStopWords = new Set([
+    "mwparseroutput", "hlist", "olmwparseroutput", "sisterprojectslist", 
+    "dlmwparseroutput", "ddlastchildaftermwparseroutput", "dtlastchildaftermwparseroutput",
+    "wikisource", "plainlist", "mainpageboxbluemwparseroutput", "mainpageboxgreenmwparseroutput",   
+    "emmwparseroutput", "mainpageheading", "mainpageboxorange", "mainpagemaintable", 
+    "mainpageboxgreen", "mainpageboxblue","navbox","wikipedia"
 ]);
 
-// Function to clean and tokenize text into words
+export const stopWords = new Set([...englishStopWords, ...extraStopWords]);
+
 export function extractWords(text) {
-    // Remove non-alphabetic characters (including numbers) and convert to lowercase
-    return text.toLowerCase().replace(/[^a-z\s]/g, '').split(/\s+/);
+    const tokenizer = new natural.WordTokenizer();
+    return tokenizer.tokenize(text.toLowerCase()).filter(word => /^[a-z]+$/.test(word)); // only keep alphabetic words
 }
 
 // Function to count the frequency of words
@@ -37,11 +43,11 @@ export function countWords(text, minLength = 3, maxFrequency = 100) {
 
     // Normalize word count by dividing by total word count
     const normalizedWordCount = [...wordCount.entries()].map(([word, count]) => {
-        const normalizedCount = Math.floor((count / totalWords)*10000);
+        const normalizedCount = Math.floor((count / totalWords) * 10000); // Scaling for more precision
         return [word, normalizedCount];
     });
 
     // Sort by normalized frequency in descending order
     const sortedWordCount = normalizedWordCount.sort((a, b) => b[1] - a[1]);
-    return sortedWordCount.slice(0, 40);
+    return sortedWordCount.slice(0, 40); // Return top 40 words
 }

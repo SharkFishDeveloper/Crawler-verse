@@ -14,7 +14,11 @@
   "dependencies": {
     "@prisma/client": "^6.0.0",
     "colorette": "^2.0.20",
+    "compromise": "^14.14.3",
     "express": "^4.21.1",
-    "prisma": "^6.0.0"
+    "natural": "^8.0.1",
+    "prisma": "^6.0.0",
+    "stopword": "^3.1.2",
+    "stopwords": "^0.0.9"
   }
 }

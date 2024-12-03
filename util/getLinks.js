@@ -2,6 +2,7 @@ import checkRobotsTxt from "./checkRobots.js";
 import linksFilterer from "./linksFilterer.js";
 import { countWords } from "./core.js";
 import prisma from "./prisma.js";
+import { red, redBright } from "colorette";
 
 
 export default async function crawl(urlString) {

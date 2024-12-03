@@ -2,6 +2,11 @@
 import crawl from "./util/getLinks.js"
 import express from "express";
 import prisma from "./util/prisma.js";
+import natural from 'natural';
+import stopword from 'stopword';
+import {calculateTFIDF} from "./util/calculateTidf.js";
+import { red, redBright } from "colorette";
+
 
 function delay() {
     const randomDelay = Math.floor(Math.random() * 4000) + 1000; 
@@ -15,12 +20,13 @@ async function startCrawling() {
 }
 
 async function bfsCrawl(url) {
-    let crawled = 0;
+    let crawled = 1;
     let queue = [];
     let visited = new Set();
     let crawlableList = await crawl(url); 
-    queue.push(crawlableList[1]);
-
+    queue.push(crawlableList[19]);
+    console.log(crawlableList[19])
+    return;
     while (queue.length !== 0) {
         const currentSite = queue.shift(); 
         if (visited.has(currentSite)) {
@@ -31,11 +37,13 @@ async function bfsCrawl(url) {
 
         console.log(`Visiting: ${currentSite}`,crawled);
         await delay();
+        crawled++;
         const newLinks = await crawl(currentSite);
-        for (let link of newLinks) {
-            if (!visited.has(link)) {
-                crawled++;
-                queue.push(link); 
+        if(newLinks!==undefined && newLinks!==null){
+            for (let link of newLinks) {
+                if (!visited.has(link)) {
+                    queue.push(link); 
+                }
             }
         }
     }
@@ -44,12 +52,12 @@ async function bfsCrawl(url) {
 }
 
 
-// startCrawling();
+startCrawling();
 
 
 const app = express();
 app.use(express.json());
-app.listen(3000,()=>{
+app.listen(4000,()=>{
     console.log("Listening on port : 3000")
 })
 
@@ -58,33 +66,36 @@ app.get("/",(req,res)=>{
 })
 
 app.post("/search", async (req, res) => {
-    const { query } = req.body;  // Extract the search query from the request body
-
-    if (!query) {
-        return res.status(400).json({ message: "Search query is required" });
-    }
+    const { query } = req.body;  
+    const processedTokens = preprocessText(query);
+    console.log(processedTokens);
 
     try {
-        // Query the Word model in Prisma, searching for words that match the query
-        const searchResults = await prisma.word.findMany({
+        const searchResults = await prisma.website.findMany({
             where: {
                 word: {
-                    contains: query,  // Match the query in the word field
-                    mode: 'insensitive' // Case-insensitive search
-                }
-            },
-            orderBy: {
-                importance: 'desc'  // Order by importance in descending order
-            },
-            include: {
-                website: {
-                    select: {
-                        name: true ,
-                        metadata:true 
+                    some: {
+                        word: {
+                            in: processedTokens, 
+                            mode: 'insensitive'
+                        }
                     }
                 }
             },
-            take: 10
+            include: {
+                word: {
+                    where: {
+                        word: {
+                            in: processedTokens, 
+                            mode: 'insensitive'
+                        }
+                    },
+                    select: {
+                        word: true, // Only select the word field from the Word model
+                        importance: true
+                    }
+                },
+            }
         });
 
         // If no results are found, send an appropriate message
@@ -95,17 +106,31 @@ app.post("/search", async (req, res) => {
         const formattedResults = searchResults.map(result => ({
             word: result.word,
             importance: result.importance,
-            websiteName: result.website.name,
-            metadata: result.website.metadata // Flatten the website name
+            websiteName: result.name,
+            metadata: result.metadata 
         }));
 
-        // Return the search results
+        var result = calculateTFIDF(formattedResults);
+        console.log(JSON.stringify(result, null, 2));
+
+
         return res.json({
             message: `Your search query "${query}" returned the following results:`,
-            results: formattedResults
+            results: result
         });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: "An error occurred while processing your search." });
     }
 });
+
+function preprocessText(text) {
+    text = text.toLowerCase();
+    const tokenizer = new natural.WordTokenizer();
+    let tokens = tokenizer.tokenize(text);
+
+    //? is NLP important, to include (I haven't)
+    tokens = stopword.removeStopwords(tokens);
+    return tokens;
+
+}
