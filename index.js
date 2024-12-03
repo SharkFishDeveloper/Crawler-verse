@@ -20,7 +20,7 @@ async function bfsCrawl(url) {
     let queue = [];
     let visited = new Set();
     let crawlableList = await crawl(url); 
-    queue.push(crawlableList[0]);
+    queue.push(crawlableList[1]);
 
     while (queue.length !== 0) {
         const currentSite = queue.shift(); 

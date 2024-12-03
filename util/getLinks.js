@@ -1,6 +1,6 @@
 import checkRobotsTxt from "./checkRobots.js";
 import linksFilterer from "./linksFilterer.js";
-
+import { countWords } from "./core.js";
 
 
 export default async function crawl(urlString) {
@@ -36,12 +36,16 @@ export default async function crawl(urlString) {
     // Extract title and metadata
     const titleMatch = html.match(/<title>([^<]*)<\/title>/);
     const title = titleMatch ? titleMatch[1] : "No title";
+
+    //! count no. of words per page and arrange them
+    const bodyText = html.replace(/<\/?[^>]+(>|$)/g, " ");  // Remove HTML tags
+    const wordFrequency = countWords(bodyText);
+    console.log(`Word frequency for ${url}:`, wordFrequency);
+
     let listOfFilteredLinks = linksFilterer(links);
     listOfFilteredLinks = listOfFilteredLinks.filter(link => {
         const url = new URL(link);
         return !notCrawlableList.some(disallowedPath => url.pathname.includes(disallowedPath));
     });
-
-    console.log("FINAL CRAWLABLE LIST ->",listOfFilteredLinks)
     return listOfFilteredLinks;
 }
