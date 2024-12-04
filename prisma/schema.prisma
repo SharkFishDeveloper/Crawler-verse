@@ -13,6 +13,8 @@ model Website {
   id      String   @id @default(uuid()) 
   name    String   @unique
   word    Word[]
+  image   String?
+  domain  String?
   metadata    Json?
 }
 

@@ -16,7 +16,7 @@ function delay() {
 async function startCrawling() {
     //* on other sites remove the below comment
     // wiki_robots_blocked_sites = await checkRobotsTxt("https://en.wikipedia.org")
-    await bfsCrawl("https://en.wikipedia.org/wiki/Main_Page");
+    await bfsCrawl('https://en.wikipedia.org/wiki/History');
 }
 
 async function bfsCrawl(url) {
@@ -24,15 +24,13 @@ async function bfsCrawl(url) {
     let queue = [];
     let visited = new Set();
     let crawlableList = await crawl(url); 
-    queue.push(crawlableList[19]);
-    console.log(crawlableList[19])
-    return;
+    console.log(crawlableList)
+    queue.push(crawlableList[1]);
     while (queue.length !== 0) {
         const currentSite = queue.shift(); 
         if (visited.has(currentSite)) {
             continue;
         }
-
         visited.add(currentSite);
 
         console.log(`Visiting: ${currentSite}`,crawled);
@@ -52,7 +50,7 @@ async function bfsCrawl(url) {
 }
 
 
-startCrawling();
+// startCrawling();
 
 
 const app = express();
@@ -82,7 +80,11 @@ app.post("/search", async (req, res) => {
                     }
                 }
             },
-            include: {
+            select: {
+                name: true,
+                image: true,
+                domain: true,
+                metadata: true,
                 word: {
                     where: {
                         word: {
@@ -91,16 +93,17 @@ app.post("/search", async (req, res) => {
                         }
                     },
                     select: {
-                        word: true, // Only select the word field from the Word model
-                        importance: true
+                        word: true, 
+                        importance: true,                        
                     }
                 },
-            }
+            },
         });
-
+        
+        console.log(searchResults)
         // If no results are found, send an appropriate message
         if (searchResults.length === 0) {
-            return res.json({ message: "No words found for your search query." });
+            return res.json({ message: "No words found for your search query.",status:300 });
         }
 
         const formattedResults = searchResults.map(result => ({
@@ -116,7 +119,8 @@ app.post("/search", async (req, res) => {
 
         return res.json({
             message: `Your search query "${query}" returned the following results:`,
-            results: result
+            results: result,
+            status:200
         });
     } catch (error) {
         console.error(error);
