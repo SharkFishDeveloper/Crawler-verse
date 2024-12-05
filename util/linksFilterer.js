@@ -1,5 +1,6 @@
 
 const linksFilterer = (links)=>{
+    try {
     return links.filter(link => {
         const urlObj = new URL(link);
     
@@ -64,6 +65,10 @@ const linksFilterer = (links)=>{
             urlObj.hostname !== ""                         // Ensures hostname exists
         );
     });
+} catch (error) {
+    console.error("Error filtering links:", error);
+    return []; // Return an empty array if an error occurs
+}
     
 }
 

@@ -34,6 +34,7 @@ export function calculateTFIDF(results) {
         return {
             websiteName: result.websiteName,
             metadata: result.metadata,
+            domain:result.domain,
             tfidfWords: tfidfWords.sort((a, b) => b.tfidf - a.tfidf) 
         };
     });

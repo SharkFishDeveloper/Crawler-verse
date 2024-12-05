@@ -10,7 +10,7 @@ const extraStopWords = new Set([
     "dlmwparseroutput", "ddlastchildaftermwparseroutput", "dtlastchildaftermwparseroutput",
     "wikisource", "plainlist", "mainpageboxbluemwparseroutput", "mainpageboxgreenmwparseroutput",   
     "emmwparseroutput", "mainpageheading", "mainpageboxorange", "mainpagemaintable", 
-    "mainpageboxgreen", "mainpageboxblue","navbox","wikipedia"
+    "mainpageboxgreen", "mainpageboxblue","navbox","wikipedia","blue","button","main","width","height","text","title","heading","content","mainpage","vector","content","padding","wikimedia","parser","output","mont","displaystyle","disabled","identificadors"
 ]);
 
 export const stopWords = new Set([...englishStopWords, ...extraStopWords]);
